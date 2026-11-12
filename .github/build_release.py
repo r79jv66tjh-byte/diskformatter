@@ -45,6 +45,14 @@ def main():
         pip += ["-r", "requirements.txt"]
     run(pip)
 
+    # --add-data "quelle;ziel": Quelle absolut machen (PyInstaller löst sie sonst relativ zu --specpath auf)
+    extra = list(build.get("pyinstaller", []))
+    for i, a in enumerate(extra[:-1]):
+        if a == "--add-data":
+            src, _, dst = extra[i + 1].partition(";")
+            extra[i + 1] = f"{os.path.join(ROOT, src)};{dst}"
+    build["pyinstaller"] = extra
+
     out = os.path.join(ROOT, "release")
     shutil.rmtree(out, ignore_errors=True)
     os.makedirs(out)
