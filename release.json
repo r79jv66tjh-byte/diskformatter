@@ -1,0 +1,5 @@
+{
+  "name": "DiskFormatter",
+  "entry": "DiskFormatter.pyw",
+  "pyinstaller": []
+}
