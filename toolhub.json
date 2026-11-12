@@ -1,0 +1,58 @@
+{
+  "name": "DiskFormatter",
+  "description": "Laufwerke formatieren (NTFS, exFAT, FAT32) und vorher sicher mit Nullen überschreiben – nur ein Volume oder den ganzen Datenträger inkl. Partitionstabelle, z. B. vor dem Verkauf eines USB-Sticks. System-/Windows-Datenträger sind immer gesperrt, interne Platten nur nach Freischalten in der GUI.",
+  "category": "Laufwerke & USB",
+  "commands": [
+    {
+      "name": "drives",
+      "description": "Datenträger und Volumes mit Buchstabe, Name, Größe, Dateisystem, Bustyp (USB/SATA/NVMe), Wechseldatenträger, Systemlaufwerk und Sperrgründen (selectable=false heißt: darf nicht bearbeitet werden).",
+      "run": ["python", "cli.py", "drives"],
+      "args": [
+        {"name": "selectable", "flag": "--selectable", "type": "boolean", "required": false, "description": "Nur Datenträger, die bearbeitet werden dürfen"}
+      ],
+      "readonly": true
+    },
+    {
+      "name": "plan",
+      "description": "Vorschau einer Aktion ohne Änderung: Zusammenfassung (Datenträger, Größe, Modell, Seriennummer), Schritte, geschätzte Dauer, Sperrgründe und welcher Wert für confirm_target nötig ist.",
+      "run": ["python", "cli.py", "plan"],
+      "args": [
+        {"name": "action", "flag": "--action", "type": "string", "required": true, "description": "format oder wipe", "enum": ["format", "wipe"]},
+        {"name": "target", "flag": "--target", "type": "string", "required": true, "description": "Laufwerksbuchstabe (E:) oder bei wipe Datenträgernummer (3) für den ganzen Datenträger"},
+        {"name": "fs", "flag": "--fs", "type": "string", "required": false, "description": "Dateisystem danach", "enum": ["NTFS", "exFAT", "FAT32"]},
+        {"name": "label", "flag": "--label", "type": "string", "required": false, "description": "Volumenname"},
+        {"name": "full", "flag": "--full", "type": "boolean", "required": false, "description": "Vollständig statt Schnellformatierung (nur format)"},
+        {"name": "style", "flag": "--style", "type": "string", "required": false, "description": "Partitionsstil nach dem Nullen des ganzen Datenträgers", "enum": ["GPT", "MBR"]}
+      ],
+      "readonly": true
+    },
+    {
+      "name": "format",
+      "description": "Volume formatieren (löscht alle Daten darauf). confirm_target muss exakt der Laufwerksbuchstabe sein. Ohne confirm=true nur Vorschau. Braucht Adminrechte (Windows fragt per UAC).",
+      "run": ["python", "cli.py", "format"],
+      "args": [
+        {"name": "target", "flag": "--target", "type": "string", "required": true, "description": "Laufwerksbuchstabe, z. B. E:"},
+        {"name": "fs", "flag": "--fs", "type": "string", "required": false, "description": "Dateisystem (Standard NTFS)", "enum": ["NTFS", "exFAT", "FAT32"]},
+        {"name": "label", "flag": "--label", "type": "string", "required": false, "description": "Volumenname"},
+        {"name": "full", "flag": "--full", "type": "boolean", "required": false, "description": "Vollständige Formatierung (langsam)"},
+        {"name": "confirm_target", "flag": "--confirm-target", "type": "string", "required": true, "description": "Zur Bestätigung derselbe Laufwerksbuchstabe wie target"}
+      ],
+      "readonly": false,
+      "timeout": 86400
+    },
+    {
+      "name": "wipe",
+      "description": "Sicher löschen: mit Nullen überschreiben und neu formatieren. target=Buchstabe (E:) nullt nur dieses Volume; target=Datenträgernummer (3) nullt den ganzen Datenträger inkl. Partitionstabelle und legt danach eine neue Partition an. Prüft per Stichprobe, dass gelesene Sektoren 0 sind. confirm_target muss exakt zum Ziel passen. Ohne confirm=true nur Vorschau. Braucht Adminrechte (UAC).",
+      "run": ["python", "cli.py", "wipe"],
+      "args": [
+        {"name": "target", "flag": "--target", "type": "string", "required": true, "description": "Laufwerksbuchstabe (E:) oder Datenträgernummer (3)"},
+        {"name": "fs", "flag": "--fs", "type": "string", "required": false, "description": "Dateisystem danach (Standard NTFS)", "enum": ["NTFS", "exFAT", "FAT32"]},
+        {"name": "label", "flag": "--label", "type": "string", "required": false, "description": "Volumenname"},
+        {"name": "style", "flag": "--style", "type": "string", "required": false, "description": "Partitionsstil (nur ganzer Datenträger)", "enum": ["GPT", "MBR"]},
+        {"name": "confirm_target", "flag": "--confirm-target", "type": "string", "required": true, "description": "Zur Bestätigung: derselbe Buchstabe bzw. dieselbe Datenträgernummer wie target"}
+      ],
+      "readonly": false,
+      "timeout": 86400
+    }
+  ]
+}
