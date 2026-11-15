@@ -1,5 +1,6 @@
 # Copy to .github/workflows/checks.yml in a Windows tool repository.
-# Runs the test suite on every pull request, which release.yml alone never does.
+# Runs the test suite, the dead code checks and check-rules on every pull request, which release.yml alone never does.
+# Needs the repository secret AI_CODING_TOOLS_TOKEN: a fine-grained token with read access to the contents of AI-Coding-Tools.
 name: checks
 
 on:
@@ -18,6 +19,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          # check-rules diffs against the base branch, which a shallow checkout lacks.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -31,3 +35,35 @@ jobs:
           else
             python -m unittest discover -s tests -v
           fi
+      - name: Install dead code tools
+        # Pinned so a tool update cannot turn unrelated PRs red; bump together with AI-Coding-Tools checks.yml.
+        run: python -m pip install ruff==0.17.5 vulture==2.16
+      - name: Dead code
+        # Both tools skip .pyw files when scanning a folder, so the GUI entry scripts are passed explicitly.
+        run: |
+          git ls-files -z '*.pyw' | xargs -0 ruff check --select F401,F811,F841,ERA001 .
+          git ls-files -z '*.pyw' | xargs -0 vulture --exclude .ai-coding-tools .
+      - name: Require AI-Coding-Tools token
+        if: github.event_name == 'pull_request'
+        env:
+          TOKEN: ${{ secrets.AI_CODING_TOOLS_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "Repository secret AI_CODING_TOOLS_TOKEN is missing; see templates/windows-tool-checks.yml in AI-Coding-Tools" >&2
+            exit 1
+          fi
+      - name: Check out AI-Coding-Tools
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          repository: r79jv66tjh-byte/AI-Coding-Tools
+          token: ${{ secrets.AI_CODING_TOOLS_TOKEN }}
+          path: .ai-coding-tools
+          # Only check-rules runs from it; later steps never need the token.
+          persist-credentials: false
+      - name: Rule check on changed lines
+        if: github.event_name == 'pull_request'
+        env:
+          # The Windows console encoding cannot print every character check-rules reports.
+          PYTHONUTF8: "1"
+        run: python .ai-coding-tools/bin/check-rules --diff "origin/${{ github.base_ref }}"

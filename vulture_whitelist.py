@@ -1,0 +1,16 @@
+# Names that only code outside this project uses, so vulture cannot see the use.
+# Kept by bin/dead-code-triage from AI-Coding-Tools; lines with another reason are kept as written.
+Confirm  # unittest test class (tests/test_safety.py:152)
+ExecuteGuards  # unittest test class (tests/test_safety.py:172)
+Locks  # unittest test class (tests/test_safety.py:81)
+SystemDrive  # unittest test class (tests/test_system_drive.py:22)
+WindowsDrive  # unittest test class (tests/test_system_drive.py:33)
+_.cbSize  # ctypes structure field (diskformatter/elevate.py:29)
+_.fMask  # ctypes structure field (diskformatter/elevate.py:30)
+_.lpDirectory  # ctypes structure field (diskformatter/elevate.py:34)
+_.lpFile  # ctypes structure field (diskformatter/elevate.py:32)
+_.lpParameters  # ctypes structure field (diskformatter/elevate.py:33)
+_.lpVerb  # ctypes structure field (diskformatter/elevate.py:31)
+_.nShow  # ctypes structure field (diskformatter/elevate.py:35)
+exc  # __exit__ parameter (diskformatter/rawio.py:97)
+setUpModule  # unittest runs this module hook (tests/test_safety.py:65)
