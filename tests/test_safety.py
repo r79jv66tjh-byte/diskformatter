@@ -55,8 +55,18 @@ def raw():
     }
 
 
+SYSTEM_LETTERS = {"C", "W"}
+
+
 def snap():
-    return disks.build_snapshot(raw(), {"C", "W"})
+    return disks.build_snapshot(raw(), SYSTEM_LETTERS)
+
+
+def setUpModule():
+    # The fake disks put Windows on W:, so the real machine's drives must not leak in.
+    patcher = mock.patch.object(disks, "system_letters", return_value=SYSTEM_LETTERS)
+    patcher.start()
+    unittest.addModuleCleanup(patcher.stop)
 
 
 SAFE = Settings(allow_internal=False)

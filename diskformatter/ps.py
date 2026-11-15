@@ -123,20 +123,20 @@ def is_admin() -> bool:
         return False
 
 
+# Both drives feed the system lock, so a guessed letter could leave the real one unlocked.
 def system_drive() -> str:
-    return (os.environ.get("SystemDrive") or "C:")[0].upper()
+    drive = os.environ.get("SystemDrive")
+    if not drive:
+        raise RuntimeError("Umgebungsvariable SystemDrive fehlt: Systemlaufwerk unbekannt, Sperre nicht möglich")
+    return drive[0].upper()
 
 
 def windows_drive() -> str:
     import ctypes
     buf = ctypes.create_unicode_buffer(260)
-    try:
-        ctypes.windll.kernel32.GetWindowsDirectoryW(buf, 260)
-        if buf.value:
-            return buf.value[0].upper()
-    except Exception:
-        pass
-    return (os.environ.get("SystemRoot") or os.environ.get("windir") or "C:\\")[0].upper()
+    if not ctypes.windll.kernel32.GetWindowsDirectoryW(buf, 260) or not buf.value:
+        raise RuntimeError("Windows-Ordner nicht ermittelbar: Laufwerk unbekannt, Sperre nicht möglich")
+    return buf.value[0].upper()
 
 
 ProgressFn = Callable[[float | None, str], None]
