@@ -41,7 +41,6 @@ class VolumeWriter:
         self.path = f"\\\\.\\{letter.upper()}:"
         self.h = None
         self.length = 0
-        self.locked = False
 
     def __enter__(self):
         h = k32.CreateFileW(self.path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -52,7 +51,6 @@ class VolumeWriter:
         ret = wintypes.DWORD()
         for _ in range(10):          # Explorer/Indexer halten evtl. kurz Dateien offen
             if k32.DeviceIoControl(h, FSCTL_LOCK_VOLUME, None, 0, None, 0, ctypes.byref(ret), None):
-                self.locked = True
                 break
             time.sleep(0.5)
         if not k32.DeviceIoControl(h, FSCTL_DISMOUNT_VOLUME, None, 0, None, 0, ctypes.byref(ret), None):
