@@ -1,0 +1,33 @@
+# Copy to .github/workflows/checks.yml in a Windows tool repository.
+# Runs the test suite on every pull request, which release.yml alone never does.
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Tests
+        # A tests/__init__.py makes tests a package, which needs the repo root as top-level dir.
+        run: |
+          if [ -f tests/__init__.py ]; then
+            python -m unittest discover -s tests -t . -v
+          else
+            python -m unittest discover -s tests -v
+          fi
